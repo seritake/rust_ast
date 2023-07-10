@@ -1,6 +1,5 @@
-mod engine {
-    mod parser;
-}
+mod engine;
+mod helper;
 
 fn main() {
     println!("Hello, world!");
