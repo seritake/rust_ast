@@ -2,9 +2,8 @@ use super::{parser::AST, Instruction};
 use crate::helper::safe_add;
 use std::{
     error::Error,
-    fmt::{self, Display}
+    fmt::{self, Display, Formatter}
 };
-use std::fmt::Formatter;
 
 #[derive(Debug)]
 pub enum CodeGenError {
@@ -19,6 +18,8 @@ impl Display for CodeGenError {
         write!(f, "Code Gen Error, {:?}", self)
     }
 }
+
+impl Error for CodeGenError {}
 
 #[derive(Default, Debug)]
 struct Generator {
@@ -91,7 +92,7 @@ impl Generator {
 
     fn gen_seq(&mut self, exprs: &[AST]) -> Result<(), CodeGenError> {
         for e in exprs {
-            self.get_expr(e)?;
+            self.gen_expr(e)?;
         }
         Ok(())
     }
@@ -144,4 +145,24 @@ pub fn get_code(ast: &AST) -> Result<Vec<Instruction>, CodeGenError> {
     let mut generator = Generator::default();
     generator.gen_code(ast)?;
     Ok(generator.insts)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::engine::codegen::get_code;
+    use crate::engine::parser::AST;
+
+    #[test]
+    fn test_get_code() {
+        let ast = AST::Seq(vec![AST::Plus(Box::new(AST::Char('a')))]);
+        let code = get_code(&ast).unwrap();
+        assert_eq!(
+            code,
+            vec![
+                crate::engine::Instruction::Char('a'),
+                crate::engine::Instruction::Split(0, 2),
+                crate::engine::Instruction::Match,
+            ]
+        );
+    }
 }

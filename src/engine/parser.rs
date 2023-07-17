@@ -4,11 +4,10 @@ use std::{
     fmt::{self, Display},
     mem::take
 };
-use std::fmt::{Formatter, write};
-use std::os::macos::raw::stat;
+use std::fmt::{Formatter};
 
 // 中小構文木を表現するための型
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AST {
     Char(char),
     Plus(Box<AST>),
@@ -27,6 +26,7 @@ pub enum ParseError {
     Empty,
 }
 
+// ASTを文字列に変換する
 impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
@@ -67,6 +67,7 @@ enum PSQ {
     Question
 }
 
+// +, *, ?の処理
 fn parse_plus_start_question(
     seq: &mut Vec<AST>,
     ast_type: PSQ,
@@ -180,5 +181,16 @@ pub fn parse(expr: &str) -> Result<AST, Box<ParseError>> {
         Ok(ast)
     } else {
         Err(Box::new(ParseError::Empty))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let ast = parse("a+").unwrap();
+        assert_eq!(ast, AST::Seq(vec![AST::Plus(Box::new(AST::Char('a')))]));
     }
 }
